@@ -1,4 +1,5 @@
 use std::io;
+use std::cmp;
 
 fn valid_cmd(cmd: &Vec<&str>) -> bool {
     if cmd[0] < "a" || "c" < cmd[0] { return false }
@@ -19,6 +20,8 @@ fn main() {
         let cmd: Vec<&str> = cmd.trim().split(' ').collect();
         if !valid_cmd(&cmd) { continue; }
 
-        println!("{:?}", &cmd);
+        let c = cmd[0].chars().nth(0).unwrap();
+        let amount = cmp::min(heap[c as usize - 'a' as usize], cmd[1].parse().unwrap());
+        heap[c as usize - 'a' as usize] -= amount;
     }
 }

@@ -23,5 +23,10 @@ fn main() {
         let c = cmd[0].chars().nth(0).unwrap();
         let amount = cmp::min(heap[c as usize - 'a' as usize], cmd[1].parse().unwrap());
         heap[c as usize - 'a' as usize] -= amount;
+        let rest: i32 = heap.iter().sum();
+        if rest == 0 {
+            println!("fin");
+            return;
+        }
     }
 }

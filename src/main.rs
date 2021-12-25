@@ -39,8 +39,13 @@ fn input(heap: [u32; 3]) -> (usize, u32) {
 
 fn ai(heap: [u32; 3]) -> (usize, u32) {
     if xorsum(heap) == 0 {
-        let h: usize = rand::thread_rng().gen_range(0..3);
-        let a: u32 = rand::thread_rng().gen_range(0..heap[h]);
+        let h: usize = loop {
+            let r = rand::thread_rng().gen_range(0..3);
+            if heap[r] != 0 {
+                break r
+            }
+        };
+        let a: u32 = rand::thread_rng().gen_range(0..heap[h]) + 1;
         (h, a)
     } else {
         let mut bit = xorsum(heap);
@@ -58,8 +63,21 @@ fn ai(heap: [u32; 3]) -> (usize, u32) {
     }
 }
 
+fn init() -> [u32; 3] {
+    let mut heap = [0; 3];
+    heap[0] = rand::thread_rng().gen_range(0..16);
+    heap[1] = rand::thread_rng().gen_range(0..16);
+    loop {
+        heap[2] = rand::thread_rng().gen_range(0..16);
+        if xorsum(heap) != 0 {
+            return heap
+        }
+    }
+}
+
 fn main() {
-    let mut heap = [3, 8, 6];
+    let mut heap = init();
+
     loop {
         println!("heaps: {:?}", heap);
 

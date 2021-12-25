@@ -1,40 +1,62 @@
 use std::io;
 use std::cmp;
 
-fn valid_cmd(cmd: &Vec<&str>) -> bool {
-    if cmd[0] < "a" || "c" < cmd[0] { return false }
-    if cmd[1] < "1" { return false }
-    true
+fn xorsum(heap: [u32; 3]) -> u32 {
+    heap.iter().fold(0, |acc, i| acc ^ i)
 }
 
-fn xorsum(heap: &Vec<i32>) -> i32 {
-    heap.iter().fold(0, |acc, i| acc ^ i)
+fn exhaused(heap: [u32; 3]) -> bool {
+    let rest: u32 = heap.iter().sum();
+    rest == 0
+}
+
+fn input(heap: [u32; 3]) -> (usize, u32) {
+    loop {
+        println!("select heap: ");
+        let mut h = String::new();
+        io::stdin().read_line(&mut h).expect("failed to read");
+        let h = h.trim().parse::<usize>().unwrap();
+        if h > 2 {
+            println!("index out of range");
+            continue; 
+        }
+        if heap[h] == 0 {
+            println!("selected heap is empty");
+            continue;
+        }
+        println!("amount you take: ");
+        let mut a = String::new();
+        io::stdin().read_line(&mut a).expect("failed to read");
+        let a = a.trim().parse::<u32>().unwrap();
+        if a == 0 {
+            println!("take at least one");
+            continue;
+        }
+        break (h, a)
+    }
+}
+
+fn ai(heap: [u32; 3]) -> [u32; 3] {
+    heap
 }
 
 fn main() {
     let mut heap = [3, 8, 6];
-
     loop {
-        // print
-        println!("\nHeaps");
-        println!("a:{}  b:{}  c:{}", heap[0], heap[1], heap[2]);
+        println!("heaps: {:?}", heap);
 
-        // input
-        println!("Your turn\nformat:alphabet amount");
-        let mut cmd = String::new();
-        io::stdin().read_line(&mut cmd).expect("failed to read");
-        let cmd: Vec<&str> = cmd.trim().split(' ').collect();
-        if !valid_cmd(&cmd) { continue; }
+        // player
+        let (h, a) = input(heap);
+        heap[h] -= cmp::min(a, heap[h]);
+        if exhaused(heap) {
+            println!("player win");
+            return;
+        }
 
-        // take
-        let c = cmd[0].chars().nth(0).unwrap();
-        let amount = cmp::min(heap[c as usize - 'a' as usize], cmd[1].parse().unwrap());
-        heap[c as usize - 'a' as usize] -= amount;
-
-        // check
-        let rest: i32 = heap.iter().sum();
-        if rest == 0 {
-            println!("fin");
+        // ai
+        heap = ai(heap);
+        if exhaused(heap) {
+            println!("ai win");
             return;
         }
     }

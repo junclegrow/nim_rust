@@ -1,8 +1,10 @@
 use std::io;
 use std::cmp;
 use rand::Rng;
+use rand::seq::SliceRandom;
+use std::convert::TryInto;
 
-fn xorsum(heap: [u32; 3]) -> u32 {
+fn xorsum(heap: &[u32]) -> u32 {
     heap.iter().fold(0, |acc, i| acc ^ i)
 }
 
@@ -38,7 +40,7 @@ fn input(heap: [u32; 3]) -> (usize, u32) {
 }
 
 fn ai(heap: [u32; 3]) -> (usize, u32) {
-    if xorsum(heap) == 0 {
+    if xorsum(&heap) == 0 {
         let h: usize = loop {
             let r = rand::thread_rng().gen_range(0..3);
             if heap[r] != 0 {
@@ -48,7 +50,7 @@ fn ai(heap: [u32; 3]) -> (usize, u32) {
         let a: u32 = rand::thread_rng().gen_range(1..heap[h]);
         (h, a)
     } else {
-        let mut bit = xorsum(heap);
+        let mut bit = xorsum(&heap);
         for i in (0..5).map(|x| 1 << x) {
             bit = bit | (bit >> i);
         }
@@ -58,19 +60,17 @@ fn ai(heap: [u32; 3]) -> (usize, u32) {
             panic!("can't be");
         }
         let h = h.unwrap();
-        let a = heap[h] - (heap[h] ^ xorsum(heap));
+        let a = heap[h] - (heap[h] ^ xorsum(&heap));
         (h, a)
     }
 }
 
 fn init() -> [u32; 3] {
-    let mut heap = [0; 3];
-    heap[0] = rand::thread_rng().gen_range(1..16);
-    heap[1] = rand::thread_rng().gen_range(1..16);
+    let mut buffer: Vec<u32> = (1..16).collect();
     loop {
-        heap[2] = rand::thread_rng().gen_range(1..16);
-        if xorsum(heap) != 0 {
-            return heap
+        buffer.shuffle(&mut rand::thread_rng());
+        if xorsum(&buffer[0..3]) != 0 {
+            return buffer[0..3].try_into().expect("slice with incorrect size")
         }
     }
 }

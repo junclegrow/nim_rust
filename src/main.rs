@@ -1,5 +1,6 @@
 use std::io;
 use std::cmp;
+use rand::Rng;
 
 fn xorsum(heap: [u32; 3]) -> u32 {
     heap.iter().fold(0, |acc, i| acc ^ i)
@@ -36,8 +37,25 @@ fn input(heap: [u32; 3]) -> (usize, u32) {
     }
 }
 
-fn ai(heap: [u32; 3]) -> [u32; 3] {
-    heap
+fn ai(heap: [u32; 3]) -> (usize, u32) {
+    if xorsum(heap) == 0 {
+        let h: usize = rand::thread_rng().gen_range(0..3);
+        let a: u32 = rand::thread_rng().gen_range(0..heap[h]);
+        (h, a)
+    } else {
+        let mut bit = xorsum(heap);
+        for i in (0..5).map(|x| 1 << x) {
+            bit = bit | (bit >> i);
+        }
+        let bit = bit ^ (bit >> 1);
+        let h = heap.iter().position(|x| x & bit == bit);
+        if h == None {
+            panic!("can't be");
+        }
+        let h = h.unwrap();
+        let a = heap[h] - (heap[h] ^ xorsum(heap));
+        (h, a)
+    }
 }
 
 fn main() {
@@ -54,7 +72,9 @@ fn main() {
         }
 
         // ai
-        heap = ai(heap);
+        let (h, a) = ai(heap);
+        heap[h] -= cmp::min(a, heap[h]);
+        println!("ai took {} from {}", a, h);
         if exhaused(heap) {
             println!("ai win");
             return;

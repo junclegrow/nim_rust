@@ -4,16 +4,56 @@ use rand::Rng;
 use rand::seq::SliceRandom;
 use std::convert::TryInto;
 
-fn xorsum(heap: &[u32]) -> u32 {
-    heap.iter().fold(0, |acc, i| acc ^ i)
+type Heap = [u32; 3];
+
+enum Turn {
+    Player,
+    Ai,
 }
 
-fn exhaused(heap: [u32; 3]) -> bool {
-    let rest: u32 = heap.iter().sum();
-    rest == 0
+fn main() {
+    let mut heap = init();
+    let mut turn = Turn::Player;
+
+    loop {
+        if let Turn::Player = turn {
+            println!();
+        }
+        println!("heaps: {:?}", heap);
+        take(&mut heap, &turn);
+
+        if exhaused(&heap) {
+            println!("{} win", to_str(&turn));
+            return;
+        }
+        turn = match turn {
+            Turn::Player => Turn::Ai,
+            Turn::Ai => Turn::Player,
+        };
+    }
 }
 
-fn input(heap: [u32; 3]) -> (usize, u32) {
+fn init() -> Heap {
+    let mut buffer: Vec<u32> = (1..16).collect();
+    loop {
+        buffer.shuffle(&mut rand::thread_rng());
+        let heap: Heap = buffer[0..3].try_into().expect("slice with incorrect size");
+        if xorsum(&heap) != 0 {
+            return heap;
+        }
+    }
+}
+
+fn take(heap: &mut Heap, turn: &Turn) {
+    let (h, a) = match turn {
+        Turn::Player => input(&heap),
+        Turn::Ai => ai(&heap),
+    };
+    heap[h] -= cmp::min(a, heap[h]);
+    println!("{} took {} from {}", to_str(&turn), a, h);
+}
+
+fn input(heap: &Heap) -> (usize, u32) {
     loop {
         println!("select heap: ");
         let mut h = String::new();
@@ -39,7 +79,7 @@ fn input(heap: [u32; 3]) -> (usize, u32) {
     }
 }
 
-fn ai(heap: [u32; 3]) -> (usize, u32) {
+fn ai(heap: &Heap) -> (usize, u32) {
     if xorsum(&heap) == 0 {
         let h: usize = loop {
             let r = rand::thread_rng().gen_range(0..3);
@@ -67,37 +107,18 @@ fn ai(heap: [u32; 3]) -> (usize, u32) {
     }
 }
 
-fn init() -> [u32; 3] {
-    let mut buffer: Vec<u32> = (1..16).collect();
-    loop {
-        buffer.shuffle(&mut rand::thread_rng());
-        if xorsum(&buffer[0..3]) != 0 {
-            return buffer[0..3].try_into().expect("slice with incorrect size")
-        }
-    }
+fn xorsum(heap: &Heap) -> u32 {
+    heap.iter().fold(0, |acc, i| acc ^ i)
 }
 
-fn main() {
-    let mut heap = init();
+fn exhaused(heap: &Heap) -> bool {
+    let rest: u32 = heap.iter().sum();
+    rest == 0
+}
 
-    loop {
-        println!("heaps: {:?}", heap);
-
-        // player
-        let (h, a) = input(heap);
-        heap[h] -= cmp::min(a, heap[h]);
-        if exhaused(heap) {
-            println!("player win");
-            return;
-        }
-
-        // ai
-        let (h, a) = ai(heap);
-        heap[h] -= cmp::min(a, heap[h]);
-        println!("ai took {} from {}", a, h);
-        if exhaused(heap) {
-            println!("ai win");
-            return;
-        }
+fn to_str(turn: &Turn) -> &str {
+    match turn {
+        Turn::Player => "you",
+        Turn::Ai => "ai",
     }
 }
